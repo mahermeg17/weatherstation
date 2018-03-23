@@ -76,7 +76,6 @@ public class WeatherStationActivity extends Activity {
     private float mLastTemperature;
     private float mLastPressure;
 
-    private PubsubPublisher mPubsubPublisher;
     private ImageView mImageView;
 
     private static final int MSG_UPDATE_BAROMETER_UI = 1;
@@ -113,18 +112,10 @@ public class WeatherStationActivity extends Activity {
                 // Our sensor is connected. Start receiving temperature data.
                 mSensorManager.registerListener(mTemperatureListener, sensor,
                         SensorManager.SENSOR_DELAY_NORMAL);
-                if (mPubsubPublisher != null) {
-                    mSensorManager.registerListener(mPubsubPublisher.getTemperatureListener(), sensor,
-                            SensorManager.SENSOR_DELAY_NORMAL);
-                }
             } else if (sensor.getType() == Sensor.TYPE_PRESSURE) {
                 // Our sensor is connected. Start receiving pressure data.
                 mSensorManager.registerListener(mPressureListener, sensor,
                         SensorManager.SENSOR_DELAY_NORMAL);
-                if (mPubsubPublisher != null) {
-                    mSensorManager.registerListener(mPubsubPublisher.getPressureListener(), sensor,
-                            SensorManager.SENSOR_DELAY_NORMAL);
-                }
             }
         }
 
@@ -282,13 +273,6 @@ public class WeatherStationActivity extends Activity {
         // start Cloud PubSub Publisher if cloud credentials are present.
         int credentialId = getResources().getIdentifier("credentials", "raw", getPackageName());
         if (credentialId != 0) {
-            try {
-                mPubsubPublisher = new PubsubPublisher(this, "weatherstation",
-                        BuildConfig.PROJECT_ID, BuildConfig.PUBSUB_TOPIC, credentialId);
-                mPubsubPublisher.start();
-            } catch (IOException e) {
-                Log.e(TAG, "error creating pubsub publisher", e);
-            }
         }
     }
 
@@ -383,14 +367,6 @@ public class WeatherStationActivity extends Activity {
             } finally {
                 mLed = null;
             }
-        }
-
-        // clean up Cloud PubSub publisher.
-        if (mPubsubPublisher != null) {
-            mSensorManager.unregisterListener(mPubsubPublisher.getTemperatureListener());
-            mSensorManager.unregisterListener(mPubsubPublisher.getPressureListener());
-            mPubsubPublisher.close();
-            mPubsubPublisher = null;
         }
     }
 
